@@ -1,5 +1,7 @@
 package telran.java2022.accounting.model;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,9 +24,15 @@ public class UserAccount {
 	String firstName;
 	@Setter
 	String lastName;
+	
 	Set<String> roles;
+	@Setter
+	LocalDate passwordCreateDate;
+	
+	private static final int COUNT_DAYS_EXPIRED_PASSWORD = 60;
 
 	public UserAccount() {
+		passwordCreateDate = LocalDate.now();
 		roles = new HashSet<>();
 		roles.add("USER");
 	}
@@ -44,5 +52,8 @@ public class UserAccount {
 	public boolean removeRole(String role) {
 		return roles.remove(role);
 	}
-
+	
+	public boolean isPasswordNonExpired() {
+		return ChronoUnit.DAYS.between(passwordCreateDate, LocalDate.now()) <= COUNT_DAYS_EXPIRED_PASSWORD;
+	}
 }
