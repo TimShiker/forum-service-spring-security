@@ -3,6 +3,7 @@ package telran.java2022.accounting.service;
 import java.time.LocalDate;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,8 @@ public class UserAccountServiceImpl implements UserAccountService, CommandLineRu
 	final UserAccountRepository repository;
 	final ModelMapper modelMapper;
 	final PasswordEncoder passwordEncoder;
-
+	@Value("${password.period:30}")
+	long passwordPeriod;
 
 	@Override
 	public UserAccountResponseDto addUser(UserRegisterDto userRegisterDto) {
@@ -33,6 +35,7 @@ public class UserAccountServiceImpl implements UserAccountService, CommandLineRu
 		UserAccount userAccount = modelMapper.map(userRegisterDto, UserAccount.class);
 		String password = passwordEncoder.encode(userRegisterDto.getPassword());
 		userAccount.setPassword(password);
+		userAccount.setPasswordExpDate(LocalDate.now().plusDays(passwordPeriod));
 		repository.save(userAccount);
 		return modelMapper.map(userAccount, UserAccountResponseDto.class);
 	}
@@ -83,7 +86,7 @@ public class UserAccountServiceImpl implements UserAccountService, CommandLineRu
 		UserAccount userAccount = repository.findById(login).orElseThrow(() -> new UserNotFoundException());
 		String password = passwordEncoder.encode(newPassword);
 		userAccount.setPassword(password);
-		userAccount.setPasswordCreateDate(LocalDate.now());
+		userAccount.setPasswordExpDate(LocalDate.now().plusDays(passwordPeriod));
 		repository.save(userAccount);
 	}
 	
@@ -94,6 +97,7 @@ public class UserAccountServiceImpl implements UserAccountService, CommandLineRu
 			UserAccount userAccount = new UserAccount("admin", password , "", "");
 			userAccount.addRole("MODERATOR");
 			userAccount.addRole("ADMINISTRATOR");
+			userAccount.setPasswordExpDate(LocalDate.now().plusDays(passwordPeriod));
 			repository.save(userAccount);
 		}
 		
